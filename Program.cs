@@ -24,8 +24,9 @@ DiscordSocketConfig config = new()
 };
 services.AddSingleton<DiscordSocketClient>(_ => new(config));
 
-// Cobalt API configuration
+// Cobalt and YouTube API configuration
 services.AddScoped<CobaltApiClient>(_ => new("https://api.cobalt.tools"));
+services.AddScoped<YoutubeApiClient>();
 
 // Commands registration
 List<Command> commands = new();
