@@ -1,0 +1,6 @@
+services:
+  bot:
+    image: ghcr.io/linuxfight/discordmusicbot:master
+    environment:
+      - TOKEN="yourbottoken"
+    restart: unless-stopped
