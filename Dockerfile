@@ -1,4 +1,5 @@
 ﻿FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine AS base
+RUN apk update && apk add --no-cache opus libsodium ffmpeg
 USER $APP_UID
 WORKDIR /app
 
@@ -16,7 +17,6 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "DiscordMusicBot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-RUN apk update && apk add --no-cache opus libsodium ffmpeg
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DiscordMusicBot.dll"]
