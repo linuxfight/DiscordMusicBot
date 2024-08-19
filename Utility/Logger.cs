@@ -1,6 +1,6 @@
 using Discord;
 
-namespace DiscordMusicBot;
+namespace DiscordMusicBot.Utility;
 
 public class Logger
 {

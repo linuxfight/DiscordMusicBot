@@ -11,7 +11,7 @@ public class Handler(IServiceProvider serviceProvider)
     public async Task SlashCommand(SocketSlashCommand slashCommand)
     {
         Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
-        if (command == null)
+        if (command == null || command.Handler == null)
             await slashCommand.RespondAsync("unknown command");
         else
             await command.Handler(slashCommand, serviceProvider);
@@ -28,6 +28,9 @@ public class Handler(IServiceProvider serviceProvider)
             SlashCommandBuilder commandBuilder = new();
             commandBuilder.WithName(command.Name);
             commandBuilder.WithDescription(command.Description);
+            if (command.Parameters != null)
+                foreach (Parameter parameter in command.Parameters)
+                    commandBuilder.AddOption(parameter.Name, parameter.Type, parameter.Description, parameter.Required);
             await discordSocketClient.CreateGlobalApplicationCommandAsync(commandBuilder.Build());
         }
     }

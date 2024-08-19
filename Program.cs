@@ -1,9 +1,8 @@
 ﻿using System.Reflection;
 using Discord;
 using Discord.WebSocket;
-using DiscordMusicBot;
 using DiscordMusicBot.Bot;
-using DiscordMusicBot.Utility.CobaltApi;
+using DiscordMusicBot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
 // Token configuration
@@ -20,13 +19,13 @@ ServiceCollection services = new();
 // Client configuration
 DiscordSocketConfig config = new()
 {
-    UseInteractionSnowflakeDate = false
+    UseInteractionSnowflakeDate = false,
+    GatewayIntents = GatewayIntents.All
 };
-DiscordSocketClient client = new(config);
-services.AddSingleton(client);
+services.AddSingleton<DiscordSocketClient>(_ => new(config));
 
 // Cobalt API configuration
-services.AddScoped<Client>(_ => new("https://api.cobalt.tools"));
+services.AddScoped<CobaltApiClient>(_ => new("https://api.cobalt.tools"));
 
 // Commands registration
 List<Command> commands = new();
@@ -34,7 +33,10 @@ Type commandType = typeof(Command);
 List<Type> types = Assembly.GetExecutingAssembly().GetTypes()
     .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(commandType)).ToList();
 foreach (Type type in types)
-    commands.Add((Command)Activator.CreateInstance(type)!);
+{
+    if (Activator.CreateInstance(type) is Command command)
+        commands.Add(command);
+}
 services.AddSingleton(commands);
 
 // Build DI
@@ -42,6 +44,7 @@ IServiceProvider serviceProvider = services.BuildServiceProvider();
 
 // Adding handlers
 Handler handler = new(serviceProvider);
+DiscordSocketClient client = serviceProvider.GetRequiredService<DiscordSocketClient>();
 client.Log += Logger.Log;
 client.Ready += handler.Ready;
 client.SlashCommandExecuted += handler.SlashCommand;
