@@ -1,5 +1,5 @@
 ﻿FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine AS base
-RUN apk update && apk add --no-cache opus libsodium ffmpeg
+RUN apk update && apk add --no-cache opus libsodium ffmpeg icu
 USER $APP_UID
 WORKDIR /app
 
