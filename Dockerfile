@@ -16,7 +16,7 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "DiscordMusicBot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-RUN apk update -y && apk add --no-cache opus libsodium ffmpeg
+RUN apk update && apk add --no-cache opus libsodium ffmpeg
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DiscordMusicBot.dll"]
