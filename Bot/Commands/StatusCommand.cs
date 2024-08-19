@@ -1,4 +1,6 @@
 using Discord.WebSocket;
+using DiscordMusicBot.Utility.CobaltApi;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot.Commands;
 
@@ -11,11 +13,9 @@ public class StatusCommand : Command
         Handler = Handle;
     }
 
-    public async Task Handle(SocketSlashCommand command)
+    private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
-        HttpClient client = new();
-        HttpResponseMessage response = await client.GetAsync("https://api.cobalt.tools/api/serverInfo");
-        if (response.IsSuccessStatusCode)
+        if (await serviceProvider.GetRequiredService<Client>().Check())
             await command.RespondAsync("API is online");
         else
             await command.RespondAsync("API is offline/blocked");

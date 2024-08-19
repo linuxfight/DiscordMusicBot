@@ -10,8 +10,8 @@ public class PingCommand : Command
         Description = "pong";
         Handler = Handle;
     }
-    
-    public static async Task Handle(SocketSlashCommand command)
+
+    private static async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
         await command.RespondAsync("pong!");
     }

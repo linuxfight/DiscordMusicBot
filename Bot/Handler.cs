@@ -1,30 +1,34 @@
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using SlashCommandBuilder = Discord.SlashCommandBuilder;
 
 namespace DiscordMusicBot.Bot;
 
-public class Handler(DiscordSocketClient client, List<Command> commands)
+public class Handler(IServiceProvider serviceProvider)
 {
+    private List<Command> _commands = serviceProvider.GetRequiredService<List<Command>>();
+    
     public async Task SlashCommand(SocketSlashCommand slashCommand)
     {
-        Command? command = commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
+        Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
         if (command == null)
             await slashCommand.RespondAsync("unknown command");
         else
-            await command.Handler(slashCommand);
+            await command.Handler(slashCommand, serviceProvider);
     }
 
     public async Task Ready()
     {
-        IReadOnlyCollection<SocketApplicationCommand> existingCommands = await client.GetGlobalApplicationCommandsAsync();
+        DiscordSocketClient discordSocketClient = serviceProvider.GetRequiredService<DiscordSocketClient>();
+        IReadOnlyCollection<SocketApplicationCommand> existingCommands = await discordSocketClient.GetGlobalApplicationCommandsAsync();
         foreach (SocketApplicationCommand existingCommand in existingCommands)
             await existingCommand.DeleteAsync();
-        foreach (Command command in commands)
+        foreach (Command command in _commands)
         {
             SlashCommandBuilder commandBuilder = new();
             commandBuilder.WithName(command.Name);
             commandBuilder.WithDescription(command.Description);
-            await client.CreateGlobalApplicationCommandAsync(commandBuilder.Build());
+            await discordSocketClient.CreateGlobalApplicationCommandAsync(commandBuilder.Build());
         }
     }
 }
