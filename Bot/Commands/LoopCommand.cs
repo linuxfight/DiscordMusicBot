@@ -4,12 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot.Commands;
 
-public class SkipCommand : Command
+public class LoopCommand : Command
 {
-    public SkipCommand()
+    public LoopCommand()
     {
-        Name = "skip";
-        Description = "skip track";
+        Name = "loop";
+        Description = "loop current track";
         Handler = Handle;
     }
 
@@ -27,8 +27,11 @@ public class SkipCommand : Command
             await command.RespondAsync("audio client is null");
             return;
         }
-        
-        await command.RespondAsync($"skipping {voiceState.Songs.First().Title}");
-        voiceState.Skip();
+
+        if (voiceState.Looped)
+            voiceState.Looped = false;
+        else
+            voiceState.Looped = true;
+        await command.RespondAsync($"music is now {voiceState.Looped.ToString()}");
     }
 }

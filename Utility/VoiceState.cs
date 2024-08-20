@@ -6,6 +6,7 @@ namespace DiscordMusicBot.Utility;
 public class VoiceState
 {
     public bool Connected { get; set; }
+    public bool Looped { get; set; }
     public List<Song> Songs { get; set; } = new();
     public IAudioClient? AudioClient { get; set; }
     public Process? Ffmpeg { get; set; }
@@ -40,7 +41,7 @@ public class VoiceState
     
     public async Task PlayMusic()
     {
-        using (Ffmpeg = CreateStream(Songs.First().Url))
+        using (Ffmpeg = CreateStream(Songs.First().AudioUrl!))
         using (Music = Ffmpeg!.StandardOutput.BaseStream)
         using (Discord = AudioClient!.CreatePCMStream(AudioApplication.Mixed))
         {
@@ -72,5 +73,6 @@ public class Song
 {
     public required string Title { get; set; }
     public required string Artist { get; set; }
-    public required string Url { get; set; }
+    public required string YoutubeUrl { get; set; }
+    public string? AudioUrl { get; set; }
 }

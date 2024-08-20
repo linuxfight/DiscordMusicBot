@@ -6,7 +6,7 @@ namespace DiscordMusicBot.Bot;
 
 public class Handler(IServiceProvider serviceProvider)
 {
-    private List<Command> _commands = serviceProvider.GetRequiredService<List<Command>>();
+    private readonly List<Command> _commands = serviceProvider.GetRequiredService<List<Command>>();
     
     public Task SlashCommand(SocketSlashCommand slashCommand)
     {

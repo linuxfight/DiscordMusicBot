@@ -2,23 +2,23 @@ using System.Text.Json.Serialization;
 
 namespace DiscordMusicBot.Utility.Cobalt;
 
-public class CobaltApiResponse()
+public class CobaltApiResponse
 {
     [JsonPropertyName("status")]
-    public string? Status { get; set; }
+    public string? Status { get; init; }
     [JsonPropertyName("text")]
-    public string? Text { get; set; }
+    public string? Text { get; init; }
     [JsonPropertyName("url")]
-    public string? Url { get; set; }
+    public string? Url { get; init; }
     [JsonPropertyName("pickerType")]
-    public string? PickerType { get; set; }
+    public string? PickerType { get; init; }
     [JsonPropertyName("picker")]
-    public List<CobaltApiResponsePicker>? Picker { get; set; }
+    public List<CobaltApiResponsePicker>? Picker { get; init; }
     [JsonPropertyName("audio")]
     public string? Audio { get; set; }
 }
 
-public class CobaltApiResponsePicker()
+public class CobaltApiResponsePicker
 {
     [JsonPropertyName("type")]
     public string? Type { get; set; }

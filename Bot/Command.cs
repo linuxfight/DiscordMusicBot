@@ -1,21 +1,20 @@
 using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot;
 
-public abstract class Command()
+public abstract class Command
 {
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public List<Parameter>? Parameters { get; set; }
-    public Func<SocketSlashCommand, IServiceProvider, Task>? Handler { get; set; }
+    public string? Name { get; protected init; }
+    public string? Description { get; protected init; }
+    public List<Parameter>? Parameters { get; protected init; }
+    public Func<SocketSlashCommand, IServiceProvider, Task>? Handler { get; protected init; }
 }
 
 public class Parameter
 {
-    public string? Name { get; set; }
-    public ApplicationCommandOptionType Type { get; set; }
-    public string? Description { get; set; }
-    public bool Required { get; set; }
+    public string? Name { get; init; }
+    public ApplicationCommandOptionType Type { get; init; }
+    public string? Description { get; init; }
+    public bool Required { get; init; }
 }

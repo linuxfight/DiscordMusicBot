@@ -35,9 +35,8 @@ public class PlayCommand : Command
             await command.RespondAsync("url is null");
             return;
         }
-        Uri? uriResult;
         string firstUriPart = video.Split(" ").First();
-        bool isLink = Uri.TryCreate(firstUriPart, UriKind.Absolute, out uriResult) 
+        bool isLink = Uri.TryCreate(firstUriPart, UriKind.Absolute, out Uri? uriResult) 
                       && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps) && firstUriPart.Contains("youtu");
         
         // Get user voice channel
@@ -62,14 +61,12 @@ public class PlayCommand : Command
         CobaltApiClient cobaltApiClient = serviceProvider.GetRequiredService<CobaltApiClient>();
         YoutubeApiClient youtubeApiClient = serviceProvider.GetRequiredService<YoutubeApiClient>();
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
-        CobaltApiResponse? data;
         if (isLink)
         {
-            data = await cobaltApiClient.Json(firstUriPart);
             Video info = await youtubeApiClient.GetVideoInfo(firstUriPart);
-            Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, Url = info.Url };
+            Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.Url})");
+            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
         }
         else
         {
@@ -79,16 +76,9 @@ public class PlayCommand : Command
                 await command.Channel.SendMessageAsync("can't find video");
                 return;
             }
-            Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, Url = info.Url };
+            Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            data = await cobaltApiClient.Json(info.Url);
-            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.Url})");
-        }
-
-        if (data == null)
-        {
-            await command.Channel.SendMessageAsync("error, can't get data");
-            return;
+            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
         }
         
         if (voiceState.Connected)
@@ -100,8 +90,14 @@ public class PlayCommand : Command
         voiceState.Connected = true;
         while (voiceState.Songs.Count >= 1)
         {
+            Song current = voiceState.Songs.First();
+            CobaltApiResponse? data = await cobaltApiClient.Json(current.YoutubeUrl);
+            if (data == null)
+                break;
+            current.AudioUrl = data.Url;
             await voiceState.PlayMusic();
-            voiceState.Songs.RemoveAt(0);
+            if (!voiceState.Looped)
+                voiceState.Songs.RemoveAt(0);
         }
         await voiceState.Stop();
         await command.Channel.SendMessageAsync("leaving channel");
