@@ -96,8 +96,6 @@ public class PlayCommand : Command
                 break;
             current.AudioUrl = data.Url;
             await voiceState.PlayMusic();
-            if (!voiceState.Looped)
-                voiceState.Songs.RemoveAt(0);
         }
         await voiceState.Stop();
         await command.Channel.SendMessageAsync("leaving channel");

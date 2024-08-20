@@ -35,9 +35,4 @@ public class CobaltApiClient
         string content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<CobaltApiResponse>(content) ?? null;
     }
-
-    public async Task<Stream> GetMusicStream(string url)
-    {
-        return await _client.GetStreamAsync(url);
-    }
 }

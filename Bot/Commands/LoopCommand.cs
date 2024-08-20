@@ -32,6 +32,6 @@ public class LoopCommand : Command
             voiceState.Looped = false;
         else
             voiceState.Looped = true;
-        await command.RespondAsync($"music is now {voiceState.Looped.ToString()}");
+        await command.RespondAsync($"loop is now {voiceState.Looped.ToString()}");
     }
 }

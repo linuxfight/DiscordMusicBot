@@ -52,7 +52,8 @@ public class VoiceState
             finally
             {
                 await Discord.FlushAsync();
-                Skip();
+                if (!Looped)
+                    Skip();
             }
         }
     }
