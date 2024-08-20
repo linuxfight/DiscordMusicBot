@@ -4,12 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot.Commands;
 
-public class StopCommand : Command
+public class SkipCommand : Command
 {
-    public StopCommand()
+    public SkipCommand()
     {
-        Name = "stop";
-        Description = "stops music and leaves voice channel";
+        Name = "skip";
+        Description = "skip track";
         Handler = Handle;
     }
 
@@ -28,8 +28,7 @@ public class StopCommand : Command
             return;
         }
         
-        await voiceState.AudioClient.StopAsync();
-        voiceState.Stop();
-        await command.RespondAsync("leaving channel");
+        await command.RespondAsync($"skipping {voiceState.Songs.First()}");
+        voiceState.Skip();
     }
 }

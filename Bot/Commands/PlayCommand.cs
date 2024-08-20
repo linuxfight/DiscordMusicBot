@@ -99,47 +99,17 @@ public class PlayCommand : Command
         voiceState.AudioClient = await channel.ConnectAsync(disconnect: false, selfDeaf: true);
         voiceState.Connected = true;
         voiceState.Songs.Add(data.Url!);
-        await PlayMusic(voiceState);
+        await voiceState.PlayMusic();
         if (voiceState.Songs.Count == 1)
         {
             await voiceState.AudioClient.StopAsync();
-            voiceState.Connected = false;
-            voiceState.Songs = new();
-            voiceState.AudioClient = null;
+            voiceState.Stop();
         }
         else
         {
             voiceState.Songs.RemoveAt(0);
-            await PlayMusic(voiceState);
+            await voiceState.PlayMusic();
         }
         await command.RespondAsync("leaving channel");
-    }
-
-    private async Task PlayMusic(VoiceState voiceState)
-    {
-        using (Process? ffmpeg = CreateStream(voiceState.Songs.First()))
-        using (Stream music = ffmpeg!.StandardOutput.BaseStream)
-        using (AudioOutStream discord = voiceState.AudioClient!.CreatePCMStream(AudioApplication.Mixed))
-        {
-            try
-            {
-                await music.CopyToAsync(discord);
-            }
-            finally
-            {
-                await discord.FlushAsync();
-            }
-        }
-    }
-    
-    private Process? CreateStream(string url)
-    {
-        return Process.Start(new ProcessStartInfo
-        {
-            FileName = "ffmpeg",
-            Arguments = $"-hide_banner -loglevel panic -i \"{url}\" -ac 2 -f s16le -ar 48000 pipe:1",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-        });
     }
 }
