@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DiscordMusicBot.Utility;
+namespace DiscordMusicBot.Utility.Cobalt;
 
 public class CobaltApiResponse()
 {

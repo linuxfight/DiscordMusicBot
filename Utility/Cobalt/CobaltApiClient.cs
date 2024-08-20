@@ -1,12 +1,11 @@
 using System.Text;
 using System.Text.Json;
 
-namespace DiscordMusicBot.Utility;
+namespace DiscordMusicBot.Utility.Cobalt;
 
 public class CobaltApiClient
 {
     private readonly HttpClient _client;
-    //private JsonSerializerOptions _serializerOptions;
     private const string UserAgent = "DiscordMusicBot (https://github.com/linuxfight/DiscordMusicBot)";
     private const string ApplicationJson = "application/json";
 
@@ -16,17 +15,6 @@ public class CobaltApiClient
         _client.BaseAddress = new Uri(baseUrl);
         _client.DefaultRequestHeaders.Add("Accept", ApplicationJson);
         _client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
-
-        /*
-        _serializerOptions = new()
-        {
-            WriteIndented = true,
-            Converters =
-            {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-            }
-        };
-        */
     }
 
     public async Task<bool> Check()
@@ -46,5 +34,10 @@ public class CobaltApiClient
             ApplicationJson));
         string content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<CobaltApiResponse>(content) ?? null;
+    }
+
+    public async Task<Stream> GetMusicStream(string url)
+    {
+        return await _client.GetStreamAsync(url);
     }
 }

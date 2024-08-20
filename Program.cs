@@ -3,6 +3,7 @@ using Discord;
 using Discord.WebSocket;
 using DiscordMusicBot.Bot;
 using DiscordMusicBot.Utility;
+using DiscordMusicBot.Utility.Cobalt;
 using Microsoft.Extensions.DependencyInjection;
 
 // Token configuration
@@ -23,6 +24,7 @@ DiscordSocketConfig config = new()
     GatewayIntents = GatewayIntents.All
 };
 services.AddSingleton<DiscordSocketClient>(_ => new(config));
+services.AddSingleton<VoiceState>();
 
 // Cobalt and YouTube API configuration
 services.AddScoped<CobaltApiClient>(_ => new("https://api.cobalt.tools"));

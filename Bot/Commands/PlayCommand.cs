@@ -3,6 +3,7 @@ using Discord;
 using Discord.Audio;
 using Discord.WebSocket;
 using DiscordMusicBot.Utility;
+using DiscordMusicBot.Utility.Cobalt;
 using Microsoft.Extensions.DependencyInjection;
 using YoutubeExplode.Search;
 using YoutubeExplode.Videos;
@@ -27,7 +28,7 @@ public class PlayCommand : Command
             }
         ];
     }
-
+    
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
         string? video = command.Data.Options.First().Value as string;
@@ -87,23 +88,54 @@ public class PlayCommand : Command
             return;
         }
 
-        string path = await youtubeApiClient.Download(data.Url!, $"{Guid.NewGuid().ToString()}.opus");
-        IAudioClient audioClient = await channel.ConnectAsync();
-        using (var ffmpeg = CreateStream(path))
-        using (var output = ffmpeg?.StandardOutput.BaseStream)
-        using (var discord = audioClient.CreatePCMStream(AudioApplication.Mixed))
+        VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
+
+        if (voiceState.Connected)
         {
-            try { await output!.CopyToAsync(discord); }
-            finally { await discord.FlushAsync(); }
+            voiceState.Songs.Add(data.Url!);
+            return;
+        }
+        
+        voiceState.AudioClient = await channel.ConnectAsync(disconnect: false, selfDeaf: true);
+        await PlayMusic(voiceState, data.Url!);
+        if (voiceState.Songs.Count == 1)
+        {
+            await voiceState.AudioClient.StopAsync();
+            voiceState.Connected = false;
+            voiceState.Songs = new();
+            voiceState.AudioClient = null;
+        }
+        else
+        {
+            voiceState.Songs.RemoveAt(0);
+            await PlayMusic(voiceState, voiceState.Songs.First());
+        }
+        await command.RespondAsync("leaving channel");
+    }
+
+    private async Task PlayMusic(VoiceState voiceState, string url)
+    {
+        using (Process? ffmpeg = CreateStream(url))
+        using (Stream music = ffmpeg!.StandardOutput.BaseStream)
+        using (AudioOutStream discord = voiceState.AudioClient!.CreatePCMStream(AudioApplication.Mixed))
+        {
+            try
+            {
+                await music.CopyToAsync(discord);
+            }
+            finally
+            {
+                await discord.FlushAsync();
+            }
         }
     }
     
-    private Process? CreateStream(string path)
+    private Process? CreateStream(string url)
     {
         return Process.Start(new ProcessStartInfo
         {
             FileName = "ffmpeg",
-            Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+            Arguments = $"-hide_banner -loglevel panic -i \"{url}\" -ac 2 -f s16le -ar 48000 pipe:1",
             UseShellExecute = false,
             RedirectStandardOutput = true,
         });

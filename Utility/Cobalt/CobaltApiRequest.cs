@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DiscordMusicBot.Utility;
+namespace DiscordMusicBot.Utility.Cobalt;
 
 [Serializable]
 public class CobaltApiRequest
@@ -14,7 +14,7 @@ public class CobaltApiRequest
     [JsonPropertyName("aFormat")]
     public string AudioFormat { get; set; } = "opus";
     [JsonPropertyName("filenamePattern")]
-    public string FilenamePattern { get; set; } = "pretty";
+    public string FilenamePattern { get; set; } = "classic";
     [JsonPropertyName("isAudioOnly")]
     public bool IsAudioOnly { get; set; } = true;
     [JsonPropertyName("isTTFullAudio")]

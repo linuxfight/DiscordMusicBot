@@ -8,13 +8,17 @@ public class Handler(IServiceProvider serviceProvider)
 {
     private List<Command> _commands = serviceProvider.GetRequiredService<List<Command>>();
     
-    public async Task SlashCommand(SocketSlashCommand slashCommand)
+    public Task SlashCommand(SocketSlashCommand slashCommand)
     {
-        Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
-        if (command == null || command.Handler == null)
-            await slashCommand.RespondAsync("unknown command");
-        else
-            await command.Handler(slashCommand, serviceProvider);
+        _ = Task.Run(async () =>
+        {
+            Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
+            if (command == null || command.Handler == null)
+                await slashCommand.RespondAsync("unknown command");
+            else
+                await command.Handler(slashCommand, serviceProvider);
+        });
+        return Task.FromResult(Task.CompletedTask);
     }
 
     public async Task Ready()

@@ -1,5 +1,5 @@
 using Discord.WebSocket;
-using DiscordMusicBot.Utility;
+using DiscordMusicBot.Utility.Cobalt;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot.Commands;
