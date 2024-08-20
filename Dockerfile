@@ -1,7 +1,11 @@
 ﻿FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine AS base
-RUN apk update && apk add --no-cache opus libsodium ffmpeg icu
-USER $APP_UID
 WORKDIR /app
+RUN apk update && apk add --no-cache ffmpeg icu
+ENV SRC_DIR=/usr/lib
+ENV DEST_DIR=/app
+RUN ln -s $(ls -v $SRC_DIR/libopus.so* | tail -n 1) $DEST_DIR/libopus.so && \
+    ln -s $(ls -v $SRC_DIR/libsodium.so* | tail -n 1) $DEST_DIR/libsodium.so
+USER $APP_UID
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 ARG BUILD_CONFIGURATION=Release
