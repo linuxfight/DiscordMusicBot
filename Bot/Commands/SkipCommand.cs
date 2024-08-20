@@ -28,7 +28,8 @@ public class SkipCommand : Command
             return;
         }
         
-        await command.RespondAsync($"skipping {voiceState.Songs.First()}");
+        await command.RespondAsync($"skipping {voiceState.Songs.First().Title}");
         voiceState.Skip();
+        await voiceState.PlayMusic();
     }
 }

@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using Discord;
-using Discord.Audio;
 using Discord.WebSocket;
 using DiscordMusicBot.Utility;
 using DiscordMusicBot.Utility.Cobalt;
@@ -63,12 +61,15 @@ public class PlayCommand : Command
         
         CobaltApiClient cobaltApiClient = serviceProvider.GetRequiredService<CobaltApiClient>();
         YoutubeApiClient youtubeApiClient = serviceProvider.GetRequiredService<YoutubeApiClient>();
+        VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
         CobaltApiResponse? data;
         if (isLink)
         {
             data = await cobaltApiClient.Json(firstUriPart);
             Video info = await youtubeApiClient.GetVideoInfo(firstUriPart);
-            await command.Channel.SendMessageAsync($"[{info.Author.ChannelTitle} - {info.Title}]({info.Url})");
+            Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, Url = info.Url };
+            voiceState.Songs.Add(song);
+            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Artist}]({song.Url})");
         }
         else
         {
@@ -78,8 +79,10 @@ public class PlayCommand : Command
                 await command.Channel.SendMessageAsync("can't find video");
                 return;
             }
-            await command.Channel.SendMessageAsync($"[{info.Author.ChannelTitle} - {info.Title}]({info.Url})");
+            Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, Url = info.Url };
+            voiceState.Songs.Add(song);
             data = await cobaltApiClient.Json(info.Url);
+            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Artist}]({song.Url})");
         }
 
         if (data == null)
@@ -87,29 +90,20 @@ public class PlayCommand : Command
             await command.Channel.SendMessageAsync("error, can't get data");
             return;
         }
-
-        VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
-
+        
         if (voiceState.Connected)
         {
-            voiceState.Songs.Add(data.Url!);
             return;
         }
         
         voiceState.AudioClient = await channel.ConnectAsync(disconnect: false, selfDeaf: true);
         voiceState.Connected = true;
-        voiceState.Songs.Add(data.Url!);
-        await voiceState.PlayMusic();
-        if (voiceState.Songs.Count == 1)
+        while (voiceState.Songs.Count >= 1)
         {
-            await voiceState.AudioClient.StopAsync();
-            voiceState.Stop();
-        }
-        else
-        {
-            voiceState.Songs.RemoveAt(0);
             await voiceState.PlayMusic();
+            voiceState.Songs.RemoveAt(0);
         }
-        await command.RespondAsync("leaving channel");
+        await voiceState.Stop();
+        await command.Channel.SendMessageAsync("leaving channel");
     }
 }

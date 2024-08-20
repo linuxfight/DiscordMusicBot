@@ -28,8 +28,7 @@ public class StopCommand : Command
             return;
         }
         
-        await voiceState.AudioClient.StopAsync();
-        voiceState.Stop();
+        await voiceState.Stop();
         await command.RespondAsync("leaving channel");
     }
 }
