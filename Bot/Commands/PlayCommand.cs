@@ -69,7 +69,7 @@ public class PlayCommand : Command
             Video info = await youtubeApiClient.GetVideoInfo(firstUriPart);
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, Url = info.Url };
             voiceState.Songs.Add(song);
-            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Artist}]({song.Url})");
+            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.Url})");
         }
         else
         {
@@ -82,7 +82,7 @@ public class PlayCommand : Command
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, Url = info.Url };
             voiceState.Songs.Add(song);
             data = await cobaltApiClient.Json(info.Url);
-            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Artist}]({song.Url})");
+            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.Url})");
         }
 
         if (data == null)
