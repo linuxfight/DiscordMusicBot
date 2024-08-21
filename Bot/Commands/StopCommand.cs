@@ -27,8 +27,11 @@ public class StopCommand : Command
             await command.RespondAsync("audio client is null");
             return;
         }
-        
-        await voiceState.Stop();
-        await command.RespondAsync("leaving channel");
+
+        _ = Task.Run(async () =>
+        {
+            await command.RespondAsync("leaving channel");
+            await voiceState.Stop();
+        });
     }
 }

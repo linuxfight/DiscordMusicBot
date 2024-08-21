@@ -57,3 +57,8 @@ await client.LoginAsync(TokenType.Bot, token);
 await client.StartAsync();
 await Task.Delay(-1);
 
+// Stop bot
+await serviceProvider.GetRequiredService<VoiceState>().Stop();
+await client.StopAsync();
+await client.LogoutAsync();
+

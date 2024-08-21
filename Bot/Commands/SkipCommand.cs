@@ -15,6 +15,8 @@ public class SkipCommand : Command
 
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
+        await command.RespondAsync("not implemented");
+        /* To add skip we need to change stream to a newer one
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
         if (!voiceState.Connected)
         {
@@ -27,8 +29,13 @@ public class SkipCommand : Command
             await command.RespondAsync("audio client is null");
             return;
         }
-        
+
         await command.RespondAsync($"skipping {voiceState.Songs.First().Title}");
-        voiceState.Skip();
+        await voiceState.Skip();
+        _ = Task.Run(async () =>
+        {
+            await voiceState.PlayMusic(serviceProvider);
+        });
+         */
     }
 }

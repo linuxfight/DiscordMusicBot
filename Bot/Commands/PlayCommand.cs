@@ -1,7 +1,6 @@
 using Discord;
 using Discord.WebSocket;
 using DiscordMusicBot.Utility;
-using DiscordMusicBot.Utility.Cobalt;
 using Microsoft.Extensions.DependencyInjection;
 using YoutubeExplode.Search;
 using YoutubeExplode.Videos;
@@ -53,12 +52,6 @@ public class PlayCommand : Command
             return;
         }
         
-        // Get song data
-        // WARNING, after this you can only use send message, because interaction is already expired.
-        // We need to use this, because without it we'll be terminated for inactivity for 3 seconds. 
-        await command.RespondAsync("searching...");
-        
-        CobaltApiClient cobaltApiClient = serviceProvider.GetRequiredService<CobaltApiClient>();
         YoutubeApiClient youtubeApiClient = serviceProvider.GetRequiredService<YoutubeApiClient>();
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
         if (isLink)
@@ -66,7 +59,7 @@ public class PlayCommand : Command
             Video info = await youtubeApiClient.GetVideoInfo(firstUriPart);
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
+            await command.RespondAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
         }
         else
         {
@@ -78,26 +71,19 @@ public class PlayCommand : Command
             }
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.Channel.SendMessageAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
+            await command.RespondAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
         }
         
         if (voiceState.Connected)
         {
             return;
         }
-        
-        voiceState.AudioClient = await channel.ConnectAsync(disconnect: false, selfDeaf: true);
-        voiceState.Connected = true;
-        while (voiceState.Songs.Count >= 1)
+
+        _ = Task.Run(async () =>
         {
-            Song current = voiceState.Songs.First();
-            CobaltApiResponse? data = await cobaltApiClient.Json(current.YoutubeUrl);
-            if (data == null)
-                break;
-            current.AudioUrl = data.Url;
-            await voiceState.PlayMusic();
-        }
-        await voiceState.Stop();
-        await command.Channel.SendMessageAsync("leaving channel");
+            voiceState.AudioClient = await channel.ConnectAsync(disconnect: false, selfDeaf: true);
+            voiceState.Connected = true;
+            await voiceState.PlayMusic(serviceProvider);
+        });
     }
 }

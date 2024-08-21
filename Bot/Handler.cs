@@ -8,17 +8,13 @@ public class Handler(IServiceProvider serviceProvider)
 {
     private readonly List<Command> _commands = serviceProvider.GetRequiredService<List<Command>>();
     
-    public Task SlashCommand(SocketSlashCommand slashCommand)
+    public async Task SlashCommand(SocketSlashCommand slashCommand)
     {
-        _ = Task.Run(async () =>
-        {
-            Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
-            if (command == null || command.Handler == null)
-                await slashCommand.RespondAsync("unknown command");
-            else
-                await command.Handler(slashCommand, serviceProvider);
-        });
-        return Task.FromResult(Task.CompletedTask);
+        Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
+        if (command == null || command.Handler == null)
+            await slashCommand.RespondAsync("unknown command");
+        else
+            await command.Handler(slashCommand, serviceProvider);
     }
 
     public async Task Ready()
@@ -37,5 +33,6 @@ public class Handler(IServiceProvider serviceProvider)
                     commandBuilder.AddOption(parameter.Name, parameter.Type, parameter.Description, parameter.Required);
             await discordSocketClient.CreateGlobalApplicationCommandAsync(commandBuilder.Build());
         }
+        await discordSocketClient.SetCustomStatusAsync("mastering dj board");
     }
 }
