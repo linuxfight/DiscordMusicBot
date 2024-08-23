@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using Discord.Audio;
-using DiscordMusicBot.Utility.Cobalt;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace DiscordMusicBot.Utility;
+namespace DiscordMusicBot.Bot.Utility;
 
 public class VoiceState
 {
@@ -12,57 +10,57 @@ public class VoiceState
     public List<Song> Songs { get; set; } = new();
     public IAudioClient? AudioClient { get; set; }
     private AudioOutStream? _discordAudio;
-    private Process? _ffmpeg;
-    private Stream? _ffmpegMusic;
 
     public async Task Stop()
     {
-        await AudioClient?.StopAsync()!;
-        Connected = false;
-        Songs = new();
-        AudioClient = null;
-    }
-
-    public async Task Skip()
-    {
-        Songs.RemoveAt(0);
         if (_discordAudio != null)
         {
-            await _discordAudio.FlushAsync();
             await _discordAudio.DisposeAsync();
             _discordAudio = null;
         }
 
-        if (_ffmpegMusic != null)
+        if (AudioClient != null)
         {
-            await _ffmpegMusic.FlushAsync();
-            await _ffmpegMusic.DisposeAsync();
-            _ffmpegMusic = null;
+            await AudioClient.StopAsync();
+            AudioClient = null;
         }
-
-        if (_ffmpeg != null)
-        {
-            _ffmpeg.Kill();
-            await _ffmpeg.WaitForExitAsync();
-            _ffmpeg = null;
-        }
+        Connected = false;
+        Looped = false;
+        Songs = new();
     }
 
-    public async Task PlayMusic(IServiceProvider serviceProvider)
+    public async Task Skip()
+    {
+        CancellationTokenSource cts = new();
+        Songs.RemoveAt(0);
+        
+        if (_discordAudio != null)
+        {
+            await _discordAudio.ClearAsync(cts.Token);
+            await _discordAudio.DisposeAsync();
+            _discordAudio = null;
+        }
+
+        if (Songs.Count == 0)
+            await Stop();
+        else
+            await PlayMusic();
+    }
+
+    public async Task PlayMusic()
     {
         while (true)
         {
             Song current = Songs.First();
-            CobaltApiResponse? data = await serviceProvider.GetRequiredService<CobaltApiClient>().Json(current.YoutubeUrl);
-            if (data == null) return;
-            current.AudioUrl = data.Url;
-            await using (_discordAudio = AudioClient!.CreatePCMStream(AudioApplication.Music))
-            using (_ffmpeg = CreateStream(Songs.First().AudioUrl!))
-            await using (_ffmpegMusic = _ffmpeg!.StandardOutput.BaseStream)
+            string? audioUrl = await CobaltApiClient.Json(current.YoutubeUrl);
+            if (audioUrl == null) return;
+            using (Process? ffmpeg = CreateStream(audioUrl))
+            await using (Stream output = ffmpeg!.StandardOutput.BaseStream)
+            await using (_discordAudio = AudioClient?.CreatePCMStream(AudioApplication.Mixed))
             {
                 try
                 {
-                    await _ffmpegMusic.CopyToAsync(_discordAudio!);
+                    await output.CopyToAsync(_discordAudio!);
                 }
                 finally
                 {
@@ -70,7 +68,7 @@ public class VoiceState
                     if (!Looped) Songs.RemoveAt(0);
                 }
             }
-
+            
             if (Songs.Count >= 1)
                 continue;
             await Stop();
@@ -92,8 +90,7 @@ public class VoiceState
 
 public class Song
 {
-    public required string Title { get; set; }
-    public required string Artist { get; set; }
-    public required string YoutubeUrl { get; set; }
-    public string? AudioUrl { get; set; }
+    public required string Title { get; init; }
+    public required string Artist { get; init; }
+    public required string YoutubeUrl { get; init; }
 }

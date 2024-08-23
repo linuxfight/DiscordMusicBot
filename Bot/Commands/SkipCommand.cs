@@ -1,5 +1,5 @@
 using Discord.WebSocket;
-using DiscordMusicBot.Utility;
+using DiscordMusicBot.Bot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot.Commands;
@@ -9,14 +9,28 @@ public class SkipCommand : Command
     public SkipCommand()
     {
         Name = "skip";
-        Description = "skip track";
+        Description = Translation.SkipCommandDescription;
         Handler = Handle;
     }
 
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
-        await command.RespondAsync("not implemented");
-        /* To add skip we need to change stream to a newer one
+        VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
+        if (!voiceState.Connected || voiceState.AudioClient == null)
+        {
+            await command.RespondAsync(Translation.NotConnected);
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            await command.RespondAsync(Translation.Skipping(voiceState.Songs.First()));
+            await voiceState.Skip();
+        });
+        // To add skip we need to change stream to a newer one
+        // We need to clear old ffmpeg process and stream and replace them with a new one, and don't interrupt the process of copying bytes to discord stream
+        // Or we need a way to close these streams, create new ones and start playing again. Without leaving voice channel
+        /* 
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
         if (!voiceState.Connected)
         {

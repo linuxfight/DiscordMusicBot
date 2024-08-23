@@ -1,6 +1,5 @@
 using Discord.WebSocket;
-using DiscordMusicBot.Utility.Cobalt;
-using Microsoft.Extensions.DependencyInjection;
+using DiscordMusicBot.Bot.Utility;
 
 namespace DiscordMusicBot.Bot.Commands;
 
@@ -9,15 +8,15 @@ public class StatusCommand : Command
     public StatusCommand()
     {
         Name = "status";
-        Description = "Get status of cobalt.tools";
+        Description = Translation.StatusCommandDescription;
         Handler = Handle;
     }
 
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
-        if (await serviceProvider.GetRequiredService<CobaltApiClient>().Check())
-            await command.RespondAsync("API is online");
+        if (await CobaltApiClient.Check())
+            await command.RespondAsync(Translation.ApiOnline);
         else
-            await command.RespondAsync("API is offline/blocked");
+            await command.RespondAsync(Translation.ApiOffline);
     }
 }

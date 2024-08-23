@@ -7,12 +7,12 @@ public class PingCommand : Command
     public PingCommand()
     {
         Name = "ping";
-        Description = "pong";
+        Description = Translation.PingCommandDescription;
         Handler = Handle;
     }
 
     private static async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
-        await command.RespondAsync("pong!");
+        await command.RespondAsync(Translation.Pong);
     }
 }

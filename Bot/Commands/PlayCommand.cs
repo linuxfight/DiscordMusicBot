@@ -1,6 +1,6 @@
 using Discord;
 using Discord.WebSocket;
-using DiscordMusicBot.Utility;
+using DiscordMusicBot.Bot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using YoutubeExplode.Search;
 using YoutubeExplode.Videos;
@@ -12,15 +12,15 @@ public class PlayCommand : Command
     public PlayCommand()
     {
         Name = "play";
-        Description = "Play music from youtube link";
+        Description = Translation.PlayCommandDescription;
         Handler = Handle;
         Parameters =
         [
             new()
             {
-                Name = "video",
+                Name = Translation.TrackParamName,
                 Required = true,
-                Description = "youtube link or title",
+                Description = Translation.TrackParamDescription,
                 Type = ApplicationCommandOptionType.String
             }
         ];
@@ -28,13 +28,13 @@ public class PlayCommand : Command
     
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
-        string? video = command.Data.Options.First().Value as string;
-        if (video == null)
+        string? track = command.Data.Options.First().Value as string;
+        if (track == null)
         {
             await command.RespondAsync("url is null");
             return;
         }
-        string firstUriPart = video.Split(" ").First();
+        string firstUriPart = track.Split(" ").First();
         bool isLink = Uri.TryCreate(firstUriPart, UriKind.Absolute, out Uri? uriResult) 
                       && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps) && firstUriPart.Contains("youtu");
         
@@ -48,30 +48,29 @@ public class PlayCommand : Command
         IVoiceChannel? channel = user.VoiceChannel;
         if (channel == null)
         {
-            await command.RespondAsync("you are not in voice channel");
+            await command.RespondAsync(Translation.UserNotInVoice);
             return;
         }
         
-        YoutubeApiClient youtubeApiClient = serviceProvider.GetRequiredService<YoutubeApiClient>();
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
         if (isLink)
         {
-            Video info = await youtubeApiClient.GetVideoInfo(firstUriPart);
+            Video info = await YoutubeApiClient.GetVideoInfo(firstUriPart);
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.RespondAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
+            await command.RespondAsync(Translation.Track(song));
         }
         else
         {
-            VideoSearchResult? info = await youtubeApiClient.SearchVideo(video);
+            VideoSearchResult? info = await YoutubeApiClient.SearchVideo(track);
             if (info == null)
             {
-                await command.Channel.SendMessageAsync("can't find video");
+                await command.Channel.SendMessageAsync(Translation.TrackNotFound);
                 return;
             }
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.RespondAsync($"[{song.Artist} - {song.Title}]({song.YoutubeUrl})");
+            await command.RespondAsync(Translation.Track(song));
         }
         
         if (voiceState.Connected)
@@ -83,7 +82,7 @@ public class PlayCommand : Command
         {
             voiceState.AudioClient = await channel.ConnectAsync(disconnect: false, selfDeaf: true);
             voiceState.Connected = true;
-            await voiceState.PlayMusic(serviceProvider);
+            await voiceState.PlayMusic();
         });
     }
 }

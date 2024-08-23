@@ -2,8 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 using DiscordMusicBot.Bot;
-using DiscordMusicBot.Utility;
-using DiscordMusicBot.Utility.Cobalt;
+using DiscordMusicBot.Bot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
 // Token configuration
@@ -26,12 +25,21 @@ DiscordSocketConfig config = new()
 services.AddSingleton<DiscordSocketClient>(_ => new(config));
 services.AddSingleton<VoiceState>();
 
-// Cobalt and YouTube API configuration
-services.AddScoped<CobaltApiClient>(_ => new("https://api.cobalt.tools"));
-services.AddScoped<YoutubeApiClient>();
-
 // Commands registration
 List<Command> commands = new();
+// will have to use reflection, because native aot is not supported by discord.net
+/*
+List<Command> commands = new()
+{
+    new LoopCommand(),
+    new PingCommand(),
+    new PlayCommand(),
+    new SkipCommand(),
+    new StatusCommand(),
+    new StopCommand()
+};
+*/
+// Disabling reflection opens a way to native AoT compilation
 Type commandType = typeof(Command);
 List<Type> types = Assembly.GetExecutingAssembly().GetTypes()
     .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(commandType)).ToList();

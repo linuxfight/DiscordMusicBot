@@ -1,5 +1,5 @@
 using Discord.WebSocket;
-using DiscordMusicBot.Utility;
+using DiscordMusicBot.Bot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordMusicBot.Bot.Commands;
@@ -9,28 +9,22 @@ public class StopCommand : Command
     public StopCommand()
     {
         Name = "stop";
-        Description = "stops music and leaves voice channel";
+        Description = Translation.StopCommandDescription;
         Handler = Handle;
     }
 
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
-        if (!voiceState.Connected)
+        if (!voiceState.Connected || voiceState.AudioClient == null)
         {
-            await command.RespondAsync("already disconnected");
-            return;
-        }
-
-        if (voiceState.AudioClient == null)
-        {
-            await command.RespondAsync("audio client is null");
+            await command.RespondAsync(Translation.NotConnected);
             return;
         }
 
         _ = Task.Run(async () =>
         {
-            await command.RespondAsync("leaving channel");
+            await command.RespondAsync(Translation.Disconnecting);
             await voiceState.Stop();
         });
     }

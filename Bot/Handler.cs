@@ -12,7 +12,7 @@ public class Handler(IServiceProvider serviceProvider)
     {
         Command? command = _commands.FirstOrDefault(x => x.Name == slashCommand.CommandName);
         if (command == null || command.Handler == null)
-            await slashCommand.RespondAsync("unknown command");
+            await slashCommand.RespondAsync(Translation.UnknownCommand);
         else
             await command.Handler(slashCommand, serviceProvider);
     }
@@ -33,6 +33,6 @@ public class Handler(IServiceProvider serviceProvider)
                     commandBuilder.AddOption(parameter.Name, parameter.Type, parameter.Description, parameter.Required);
             await discordSocketClient.CreateGlobalApplicationCommandAsync(commandBuilder.Build());
         }
-        await discordSocketClient.SetCustomStatusAsync("mastering dj board");
+        await discordSocketClient.SetCustomStatusAsync(Translation.Status);
     }
 }
