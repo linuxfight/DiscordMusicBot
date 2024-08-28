@@ -1,4 +1,5 @@
 using Discord.WebSocket;
+using DiscordMusicBot.Bot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using SlashCommandBuilder = Discord.SlashCommandBuilder;
 
@@ -15,6 +16,21 @@ public class Handler(IServiceProvider serviceProvider)
             await slashCommand.RespondAsync(Translation.UnknownCommand);
         else
             await command.Handler(slashCommand, serviceProvider);
+    }
+
+    public async Task VoiceState(SocketUser client, SocketVoiceState oldState, SocketVoiceState newState)
+    {
+        VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
+        if (oldState.VoiceChannel == null)
+            return;
+        bool leftInVoice = oldState.VoiceChannel.ConnectedUsers.Count == 1;
+        bool connected = voiceState.Connected;
+        
+        if (!connected)
+            return;
+
+        if (leftInVoice)
+            await voiceState.Stop();
     }
 
     public async Task Ready()

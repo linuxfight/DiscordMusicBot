@@ -59,6 +59,7 @@ DiscordSocketClient client = serviceProvider.GetRequiredService<DiscordSocketCli
 client.Log += Logger.Log;
 client.Ready += handler.Ready;
 client.SlashCommandExecuted += handler.SlashCommand;
+client.UserVoiceStateUpdated += handler.VoiceState;
 
 // Start bot
 await client.LoginAsync(TokenType.Bot, token);
