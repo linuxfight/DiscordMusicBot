@@ -13,11 +13,10 @@ public class VoiceState
 
     public async Task Stop()
     {
+        CancellationTokenSource cts = new();
+
         if (_discordAudio != null)
-        {
-            await _discordAudio.DisposeAsync();
-            _discordAudio = null;
-        }
+            await ClearDiscordAudio(cts.Token);
 
         if (AudioClient != null)
         {
@@ -33,13 +32,9 @@ public class VoiceState
     {
         CancellationTokenSource cts = new();
         Songs.RemoveAt(0);
-        
+
         if (_discordAudio != null)
-        {
-            await _discordAudio.ClearAsync(cts.Token);
-            await _discordAudio.DisposeAsync();
-            _discordAudio = null;
-        }
+            await ClearDiscordAudio(cts.Token);
 
         if (Songs.Count == 0)
             await Stop();
@@ -85,6 +80,15 @@ public class VoiceState
             UseShellExecute = false,
             RedirectStandardOutput = true,
         });
+    }
+
+    private async Task ClearDiscordAudio(CancellationToken token)
+    {
+        if (_discordAudio == null)
+            return;
+        await _discordAudio.ClearAsync(token);
+        await _discordAudio.DisposeAsync();
+        _discordAudio = null;
     }
 }
 

@@ -24,10 +24,6 @@ public class Handler(IServiceProvider serviceProvider)
         if (oldState.VoiceChannel == null)
             return;
         bool leftInVoice = oldState.VoiceChannel.ConnectedUsers.Count == 1;
-        bool connected = voiceState.Connected;
-        
-        if (!connected)
-            return;
 
         if (leftInVoice)
             await voiceState.Stop();
