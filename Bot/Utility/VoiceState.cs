@@ -53,7 +53,7 @@ public class VoiceState
             {
                 try
                 {
-                    await output.CopyToAsync(_discordAudio!);
+                    await output.CopyToAsync(_discordAudio!, _cts.Token);
                 }
                 finally
                 {
