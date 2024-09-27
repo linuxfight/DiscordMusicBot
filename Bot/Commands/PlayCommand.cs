@@ -28,17 +28,6 @@ public class PlayCommand : Command
     
     private async Task Handle(SocketSlashCommand command, IServiceProvider serviceProvider)
     {
-        string? track = command.Data.Options.First().Value as string;
-        if (track == null)
-        {
-            await command.RespondAsync("url is null");
-            return;
-        }
-        string firstUriPart = track.Split(" ").First();
-        bool isLink = Uri.TryCreate(firstUriPart, UriKind.Absolute, out Uri? uriResult) 
-                      && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps) && firstUriPart.Contains("youtu");
-        
-        // Get user voice channel
         SocketGuildUser? user = command.User as SocketGuildUser;
         if (user == null)
         {
@@ -52,13 +41,25 @@ public class PlayCommand : Command
             return;
         }
         
+        await command.RespondAsync(Translation.Searching);
+        
+        string? track = command.Data.Options.First().Value as string;
+        if (track == null)
+        {
+            await command.Channel.SendMessageAsync("url is null");
+            return;
+        }
+        string firstUriPart = track.Split(" ").First();
+        bool isLink = Uri.TryCreate(firstUriPart, UriKind.Absolute, out Uri? uriResult) 
+                      && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps) && firstUriPart.Contains("youtu");
+        
         VoiceState voiceState = serviceProvider.GetRequiredService<VoiceState>();
         if (isLink)
         {
             Video info = await YoutubeApiClient.GetVideoInfo(firstUriPart);
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.RespondAsync(Translation.Track(song));
+            await command.Channel.SendMessageAsync(Translation.Track(song));
         }
         else
         {
@@ -70,7 +71,7 @@ public class PlayCommand : Command
             }
             Song song = new() { Title = info.Title, Artist = info.Author.ChannelTitle, YoutubeUrl = info.Url };
             voiceState.Songs.Add(song);
-            await command.RespondAsync(Translation.Track(song));
+            await command.Channel.SendMessageAsync(Translation.Track(song));
         }
         
         if (voiceState.Connected)

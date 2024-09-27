@@ -10,32 +10,30 @@ public class VoiceState
     public List<Song> Songs { get; set; } = new();
     public IAudioClient? AudioClient { get; set; }
     private AudioOutStream? _discordAudio;
+    private CancellationTokenSource _cts = new();
 
     public async Task Stop()
     {
-        CancellationTokenSource cts = new();
-
         if (_discordAudio != null)
-            await ClearDiscordAudio(cts.Token);
+            await ClearDiscordAudio();
 
+        Connected = false;
+        Looped = false;
+        Songs = new();
         if (AudioClient != null)
         {
             await AudioClient.StopAsync();
             AudioClient = null;
         }
-        Connected = false;
-        Looped = false;
-        Songs = new();
     }
 
     public async Task Skip()
     {
-        CancellationTokenSource cts = new();
         Songs.RemoveAt(0);
 
         if (_discordAudio != null)
-            await ClearDiscordAudio(cts.Token);
-
+            await ClearDiscordAudio();
+        
         if (Songs.Count == 0)
             await Stop();
         else
@@ -55,11 +53,11 @@ public class VoiceState
             {
                 try
                 {
-                    await output.CopyToAsync(_discordAudio!);
+                    await output.CopyToAsync(_discordAudio!, _cts.Token);
                 }
                 finally
                 {
-                    await _discordAudio!.FlushAsync();
+                    await _discordAudio!.FlushAsync(_cts.Token);
                     if (!Looped) Songs.RemoveAt(0);
                 }
             }
@@ -82,11 +80,14 @@ public class VoiceState
         });
     }
 
-    private async Task ClearDiscordAudio(CancellationToken token)
+    private async Task ClearDiscordAudio()
     {
+        await _cts.CancelAsync();
+        _cts.Dispose();
+        _cts = new();
         if (_discordAudio == null)
             return;
-        await _discordAudio.ClearAsync(token);
+        await _discordAudio.ClearAsync(_cts.Token);
         await _discordAudio.DisposeAsync();
         _discordAudio = null;
     }
