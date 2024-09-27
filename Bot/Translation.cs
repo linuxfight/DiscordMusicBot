@@ -23,6 +23,7 @@ public static class Translation
     public const string NotConnected = "Не подключён к войсу ⛔";
     public const string Pong = "Понг! 🏓";
     public static readonly Func<Song, string> Skipping = song => $"Пропускаю трек {Track(song)} ⏩";
+    public const string Searching = "Ищу 🔍";
     public static Func<Song, string> Track => song => $"[{song.Artist} - {song.Title}]({song.YoutubeUrl})";
     public const string TrackNotFound = "Не могу найти трек ❌";
     public const string UnknownCommand = "Неизвестная команда ❌";

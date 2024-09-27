@@ -1,7 +1,7 @@
-﻿using System.Reflection;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using DiscordMusicBot.Bot;
+using DiscordMusicBot.Bot.Commands;
 using DiscordMusicBot.Bot.Utility;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,9 +26,6 @@ services.AddSingleton<DiscordSocketClient>(_ => new(config));
 services.AddSingleton<VoiceState>();
 
 // Commands registration
-List<Command> commands = new();
-// will have to use reflection, because native aot is not supported by discord.net
-/*
 List<Command> commands = new()
 {
     new LoopCommand(),
@@ -38,16 +35,6 @@ List<Command> commands = new()
     new StatusCommand(),
     new StopCommand()
 };
-*/
-// Disabling reflection opens a way to native AoT compilation
-Type commandType = typeof(Command);
-List<Type> types = Assembly.GetExecutingAssembly().GetTypes()
-    .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsSubclassOf(commandType)).ToList();
-foreach (Type type in types)
-{
-    if (Activator.CreateInstance(type) is Command command)
-        commands.Add(command);
-}
 services.AddSingleton(commands);
 
 // Build DI
